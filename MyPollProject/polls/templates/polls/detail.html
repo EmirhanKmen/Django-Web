@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ question.question_text }} - Oy Ver{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">{{ question.question_text }}</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    📁 <strong>{{ question.category }}</strong> | 
+                    📅 {{ question.pub_date|date:"d.m.Y H:i" }}
+                </p>
+
+                {% if error_message %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Hata!</strong> {{ error_message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endif %}
+
+                <form action="{% url 'polls:vote' question.id %}" method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {% for choice in question.choice_set.all %}
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="choice" value="{{ choice.id }}" id="choice{{ choice.id }}" required>
+                                <label class="form-check-label" for="choice{{ choice.id }}">
+                                    {{ choice.choice_text }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex">
+                        <button type="submit" class="btn btn-primary">Oy Ver</button>
+                        <a href="{% url 'polls:index' %}" class="btn btn-secondary">Geri</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

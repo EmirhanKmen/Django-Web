@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ question.question_text }} - Sonuçlar{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">{{ question.question_text }} - Sonuçlar</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    📁 <strong>{{ question.category }}</strong> | 
+                    📅 {{ question.pub_date|date:"d.m.Y H:i" }}
+                </p>
+
+                {% for choice in question.choice_set.all %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-bold">{{ choice.choice_text }}</span>
+                            <span class="badge bg-info">{{ choice.votes }} oy</span>
+                        </div>
+                        <div class="progress" style="height: 30px;">
+                            {% widthratio choice.votes max_votes 100 as percentage %}
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ percentage }}%" aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                {% if percentage > 10 %}{{ percentage }}%{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <hr class="my-4">
+
+                <div class="d-grid gap-2 d-md-flex">
+                    <a href="{% url 'polls:detail' question.id %}" class="btn btn-primary">
+                        Tekrar Oy Ver
+                    </a>
+                    <a href="{% url 'polls:index' %}" class="btn btn-secondary">
+                        Tüm Anketler
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

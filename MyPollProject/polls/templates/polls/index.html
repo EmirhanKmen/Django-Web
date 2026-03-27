@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Anketler - Anket Sitesi{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="mb-4">📋 Tüm Anketler</h1>
+        
+        <!-- Arama ve Filtre -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-6">
+                        <input type="text" name="search" class="form-control" placeholder="Anket ara..." value="{{ search_query }}">
+                    </div>
+                    <div class="col-md-4">
+                        <select name="category" class="form-select">
+                            <option value="Tümü">Tüm Kategoriler</option>
+                            {% for cat_key, cat_name in categories.items %}
+                                <option value="{{ cat_key }}" {% if selected_category == cat_key %}selected{% endif %}>
+                                    {{ cat_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Ara</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Anket Listesi -->
+        {% if latest_question_list %}
+            <div class="row">
+                {% for question in latest_question_list %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ question.question_text }}</h5>
+                                <p class="card-text text-muted">
+                                    <small>
+                                        📁 <strong>{{ question.category }}</strong> | 
+                                        📅 {{ question.pub_date|date:"d.m.Y" }}
+                                    </small>
+                                </p>
+                                <a href="{% url 'polls:detail' question.id %}" class="btn btn-primary btn-sm">
+                                    Oy Ver →
+                                </a>
+                                <a href="{% url 'polls:results' question.id %}" class="btn btn-secondary btn-sm">
+                                    Sonuçlar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading">Anket Bulunamadı</h4>
+                <p>Aradığınız kriterlere uygun anket yok.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
