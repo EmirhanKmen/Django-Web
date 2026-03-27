@@ -1,35 +1,12 @@
-# Django Web Projects
+Django Web Projects
 
-İki Django projesi içeren koleksiyon.
+A collection containing two Django projects.
+Projects
+1. DjangoTutorialBaseVersion
 
-## Projeler
+Basic Django Poll Website
+2. djangotutorialP1_2
 
-### 1. DjangoTutorialBaseVersion
-Temel Django Anket Sitesi
+Django Web Development Project
 
-```bash
-cd DjangoTutorialBaseVersion
-pip install django
-python manage.py runserver
-```
-
-### 2. djangotutorialP1_2
-Django Web Geliştirme Projesi
-
-```bash
-cd djangotutorialP1_2
-pip install django
-python manage.py runserver
-```
-
-## Kurulum
-
-```bash
-pip install django
-```
-
-## Teknolojiler
-
-- Django
-- Python
-- SQLite
+This is a project assignment I completed for the 2nd-year Web Programming 2 course in the Information Systems and Technologies department.
