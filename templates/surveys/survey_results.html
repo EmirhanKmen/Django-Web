@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}{{ survey.title }} - Sonuclar - SAHAF{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <a href="{% url 'surveys:list' %}" style="color: var(--text-muted); font-size: 0.85rem;">Anketlere Don</a>
+        <h1 class="page-title" style="margin-top: 0.5rem;">{{ survey.title }} - Sonuclar</h1>
+        <p class="page-subtitle">Toplam {{ total_responses }} yanit</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <span class="badge" style="background: rgba(179, 92, 30, 0.12); color: var(--accent);">Otomatik Yenileme: Acik</span>
+        <a href="{% url 'dashboard:export_survey' slug=survey.slug %}" class="btn btn-outline btn-sm">CSV Indir</a>
+        <a href="{% url 'surveys:detail' slug=survey.slug %}" class="btn btn-outline btn-sm">Ankete Git</a>
+    </div>
+</div>
+
+<!-- Summary Stats -->
+<div class="stats-grid slide-up">
+    <div class="stat-card">
+        <div class="stat-label">Toplam Yanit</div>
+        <div class="stat-value">{{ total_responses }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Soru Sayısı</div>
+        <div class="stat-value">{{ results_data|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Durum</div>
+        <div class="stat-value" style="font-size: 1.25rem;">{{ survey.get_status_display }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Öncelik</div>
+        <div class="stat-value" style="font-size: 1.25rem;">{{ survey.get_priority_display }}</div>
+    </div>
+</div>
+
+<!-- Results per Question -->
+{% for item in results_data %}
+    <div class="card slide-up" style="margin-bottom: 1rem;">
+    <div class="card-header">
+        <h3 class="card-title">{{ item.question.text }}</h3>
+        <span class="badge badge-category">{{ item.total_answers }} yanit</span>
+    </div>
+
+    {% if item.choices_data %}
+        <!-- Chart for choice-based questions -->
+        <div style="height: 200px; margin-bottom: 1rem;">
+            <canvas id="chart-{{ item.question.id }}"></canvas>
+        </div>
+
+        {% for cd in item.choices_data %}
+        <div class="result-item">
+            <div class="result-label">
+                <span class="result-text">{{ cd.choice.text }}</span>
+                <span class="result-value">{{ cd.count }} ({{ cd.percentage }}%)</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ cd.percentage }}%;"></div>
+            </div>
+        </div>
+        {% endfor %}
+
+    {% elif item.stats %}
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
+            <div>
+                <div style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Ortalama</div>
+                <div style="font-size: 1.5rem; font-weight: 700; font-family: var(--font-mono); color: var(--accent);">{{ item.stats.average }}</div>
+            </div>
+            <div>
+                <div style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Minimum</div>
+                <div style="font-size: 1.5rem; font-weight: 700; font-family: var(--font-mono);">{{ item.stats.min }}</div>
+            </div>
+            <div>
+                <div style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Maksimum</div>
+                <div style="font-size: 1.5rem; font-weight: 700; font-family: var(--font-mono);">{{ item.stats.max }}</div>
+            </div>
+        </div>
+
+    {% elif item.text_answers %}
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            {% for text in item.text_answers %}
+            <div style="padding: 0.75rem 1rem; background: var(--bg-input); border-radius: var(--radius-sm); font-size: 0.9rem; border-left: 3px solid var(--accent);">
+                "{{ text }}"
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Henuz yanit yok.</p>
+    {% endif %}
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% for item in results_data %}
+    {% if item.choices_data %}
+    createPulseChart('chart-{{ item.question.id }}', 'bar',
+        [{% for cd in item.choices_data %}'{{ cd.choice.text|truncatechars:20 }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        [{% for cd in item.choices_data %}{{ cd.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+        'Yanıt'
+    );
+    {% endif %}
+    {% endfor %}
+
+    // Auto-refresh the page every 30 seconds to show live results
+    setTimeout(function() {
+        window.location.reload();
+    }, 30000);
+});
+</script>
+{% endblock %}

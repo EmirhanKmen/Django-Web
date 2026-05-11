@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Anketlerim - SAHAF{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Anketlerim</h1>
+        <p class="page-subtitle">Olusturdugunuz anketleri yonetin, duzenleyin veya silin</p>
+    </div>
+    <a href="{% url 'dashboard:builder' %}" class="btn btn-primary" id="btn-create-survey">Yeni Anket Olustur</a>
+</div>
+
+<!-- Status Filter -->
+<div class="filter-bar" style="margin-bottom:1.5rem">
+    <a href="{% url 'surveys:my_surveys' %}" class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-outline{% endif %}">Tümü</a>
+    {% for value, label in status_choices %}
+    <a href="?status={{ value }}" class="btn btn-sm {% if current_status == value %}btn-primary{% else %}btn-outline{% endif %}">{{ label }}</a>
+    {% endfor %}
+</div>
+
+{% if surveys %}
+<div style="display:flex;flex-direction:column;gap:1rem">
+    {% for survey in surveys %}
+    <div class="card slide-up" style="animation-delay:{{ forloop.counter0 }}00ms" id="my-survey-{{ survey.id }}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap">
+            <div style="flex:1;min-width:250px">
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem">
+                    <h3 style="font-size:1.1rem;font-weight:700">
+                        <a href="{% url 'surveys:detail' slug=survey.slug %}">{{ survey.title }}</a>
+                    </h3>
+                    <span class="badge badge-{% if survey.status == 'ACTIVE' %}active{% elif survey.status == 'DRAFT' %}draft{% elif survey.status == 'CLOSED' %}closed{% else %}category{% endif %}">
+                        {{ survey.get_status_display }}
+                    </span>
+                    <span class="badge" style="background:{% if survey.priority == 'CRITICAL' %}rgba(255,77,106,0.15){% elif survey.priority == 'HIGH' %}rgba(255,184,0,0.15){% elif survey.priority == 'MEDIUM' %}rgba(59,130,246,0.15){% else %}var(--accent-dim){% endif %};color:{% if survey.priority == 'CRITICAL' %}var(--accent-red){% elif survey.priority == 'HIGH' %}var(--accent-amber){% elif survey.priority == 'MEDIUM' %}var(--accent-blue){% else %}var(--accent){% endif %}">
+                        {{ survey.get_priority_display }}
+                    </span>
+                    {% if survey.category %}
+                    <span class="badge badge-category">{{ survey.category.name }}</span>
+                    {% endif %}
+                </div>
+                <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:0.5rem">{{ survey.description|truncatechars:150|default:"Açıklama eklenmemiş." }}</p>
+                <div style="display:flex;gap:1rem;font-size:0.8rem;color:var(--text-muted)">
+                    <span>Soru: {{ survey.total_questions }}</span>
+                    <span>Yanit: {{ survey.total_responses }}</span>
+                    <span>Sure: {{ survey.created_at|timesince }} once</span>
+                    {% if survey.location_name %}<span>Konum: {{ survey.location_name }}</span>{% endif %}
+                </div>
+            </div>
+            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+                <!-- Status Change Buttons -->
+                {% if survey.status == 'DRAFT' %}
+                <form method="post" action="{% url 'surveys:toggle_status' slug=survey.slug %}" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="ACTIVE">
+                    <button type="submit" class="btn btn-sm btn-primary" title="Yayina Al">Yayina Al</button>
+                </form>
+                {% elif survey.status == 'ACTIVE' %}
+                <form method="post" action="{% url 'surveys:toggle_status' slug=survey.slug %}" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="PAUSED">
+                        <button type="submit" class="btn btn-sm btn-outline" title="Duraklat">Duraklat</button>
+                </form>
+                <form method="post" action="{% url 'surveys:toggle_status' slug=survey.slug %}" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="CLOSED">
+                        <button type="submit" class="btn btn-sm btn-outline" style="color:var(--accent-amber);border-color:var(--accent-amber)" title="Kapat">Kapat</button>
+                </form>
+                {% elif survey.status == 'PAUSED' %}
+                <form method="post" action="{% url 'surveys:toggle_status' slug=survey.slug %}" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="ACTIVE">
+                        <button type="submit" class="btn btn-sm btn-primary" title="Devam Ettir">Devam</button>
+                </form>
+                {% elif survey.status == 'CLOSED' %}
+                <form method="post" action="{% url 'surveys:toggle_status' slug=survey.slug %}" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="ARCHIVED">
+                        <button type="submit" class="btn btn-sm btn-outline" title="Arsivle">Arsivle</button>
+                </form>
+                {% endif %}
+
+                <!-- Edit & Delete -->
+                <a href="{% url 'surveys:edit' slug=survey.slug %}" class="btn btn-sm btn-outline" title="Duzenle">Duzenle</a>
+                <a href="{% url 'surveys:results' slug=survey.slug %}" class="btn btn-sm btn-outline" title="Sonuclar">Sonuclar</a>
+                <form method="post" action="{% url 'surveys:delete' slug=survey.slug %}" style="display:inline" onsubmit="return confirm('Bu anketi silmek istediğinize emin misiniz? Bu işlem geri alınamaz!')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline" style="color:var(--accent-red);border-color:var(--accent-red)" title="Sil">Sil</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">Bos</div>
+    <h3 class="empty-title">Henuz anketiniz yok</h3>
+    <p class="empty-text">{% if current_status %}Bu durumda anketiniz bulunmuyor.{% else %}Ilk anketinizi olusturmak icin yukaridaki butona tiklayin.{% endif %}</p>
+    {% if current_status %}
+    <a href="{% url 'surveys:my_surveys' %}" class="btn btn-outline">Filtreleri Temizle</a>
+    {% else %}
+    <a href="{% url 'dashboard:builder' %}" class="btn btn-primary">Anket Olustur</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

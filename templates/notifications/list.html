@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Bildirimler - SAHAF{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div><h1 class="page-title">Bildirimler</h1><p class="page-subtitle">{{ unread_count }} okunmamis bildirim</p></div>
+    {% if notifications %}
+    <form method="post" action="{% url 'notifications:mark_all_read' %}">{% csrf_token %}
+        <button type="submit" class="btn btn-outline btn-sm">Tümünü Okundu İşaretle</button>
+    </form>
+    {% endif %}
+</div>
+{% if notifications %}
+<div style="display:flex;flex-direction:column;gap:0.5rem">
+    {% for notif in notifications %}
+    <div class="card" style="padding:1rem 1.5rem;{% if not notif.is_read %}border-left:3px solid var(--accent);{% endif %}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem">
+                    <span style="font-size:0.75rem;padding:2px 8px;border-radius:10px;background:{% if notif.notification_type == 'RESPONSE' %}var(--accent-dim){% elif notif.notification_type == 'EXPIRING' %}rgba(255,184,0,0.15){% else %}rgba(59,130,246,0.15){% endif %};color:{% if notif.notification_type == 'RESPONSE' %}var(--accent){% elif notif.notification_type == 'EXPIRING' %}var(--accent-amber){% else %}var(--accent-blue){% endif %};font-weight:600">{{ notif.get_notification_type_display }}</span>
+                    {% if not notif.is_read %}<span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block"></span>{% endif %}
+                </div>
+                <h3 style="font-weight:600;font-size:0.95rem">{{ notif.title }}</h3>
+                <p style="color:var(--text-secondary);font-size:0.85rem;margin-top:0.15rem">{{ notif.message }}</p>
+            </div>
+            <span style="color:var(--text-muted);font-size:0.75rem;white-space:nowrap">{{ notif.created_at|timesince }} once</span>
+        </div>
+        {% if notif.link %}<a href="{{ notif.link }}" style="font-size:0.8rem;margin-top:0.5rem;display:inline-block">Detay</a>{% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state"><div class="empty-icon">Bos</div><h3 class="empty-title">Bildirim yok</h3><p class="empty-text">Yeni bildirimler burada gorunecek.</p></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Aktivite Logu - SAHAF{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Aktivite Logu</h1>
+        <p class="page-subtitle">Platform geneli tum kritik islemlerin guvenlik gunlugu</p>
+    </div>
+    <a href="{% url 'dashboard:settings' %}" class="btn btn-outline btn-sm">Ayarlara Don</a>
+</div>
+{% if logs %}
+<div class="card slide-up" style="padding: 0; overflow: hidden;">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Kullanıcı</th>
+                    <th>İşlem</th>
+                    <th>Açıklama</th>
+                    <th>IP Adresi</th>
+                    <th>Tarih</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for log in logs %}
+            <tr>
+                <td style="font-weight: 500;">
+                    {% if log.user %}
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="user-avatar" style="width: 24px; height: 24px; font-size: 0.7rem;">{{ log.user.get_initials }}</span>
+                            {{ log.user.username }}
+                        </div>
+                    {% else %}
+                        <span style="color: var(--text-muted);">Sistem</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge badge-{% if log.action == 'LOGIN' %}active{% elif log.action == 'LOGOUT' %}closed{% elif log.action == 'CREATE' %}category{% elif log.action == 'UPDATE' %}draft{% elif log.action == 'DELETE' %}critical{% else %}active{% endif %}">
+                        {{ log.get_action_display }}
+                    </span>
+                </td>
+                <td style="color: var(--text-secondary); font-size: 0.9rem;">{{ log.description }}</td>
+                <td style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted);">{{ log.ip_address|default:"-" }}</td>
+                <td style="color: var(--text-muted); font-size: 0.85rem;">{{ log.created_at|date:"d/m/Y H:i:s" }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="empty-state slide-up">
+    <div class="empty-icon">Bos</div>
+    <h3 class="empty-title">Henuz kayit yok</h3>
+    <p class="empty-text">Aktiviteler otomatik olarak burada listelenecektir.</p>
+</div>
+{% endif %}
+{% endblock %}

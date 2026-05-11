@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Analitik - SAHAF{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Gelismis Analitik</h1>
+        <p class="page-subtitle">Platform geneli detayli istatistikler ve trend analizleri</p>
+    </div>
+    <div style="display:flex;gap:0.5rem">
+        <a href="{% url 'dashboard:export_all' %}" class="btn btn-outline btn-sm">CSV Olarak Disari Aktar</a>
+        <a href="{% url 'dashboard:index' %}" class="btn btn-outline btn-sm">Panele Don</a>
+    </div>
+</div>
+
+<div class="stats-grid slide-up">
+    <div class="stat-card"><div class="stat-label">Toplam Anket</div><div class="stat-value">{{ total_surveys }}</div></div>
+    <div class="stat-card"><div class="stat-label">Toplam Yanıt</div><div class="stat-value">{{ total_responses }}</div></div>
+    <div class="stat-card"><div class="stat-label">Toplam Kullanıcı</div><div class="stat-value">{{ total_users }}</div></div>
+</div>
+
+<div class="grid-2">
+    <div class="chart-container slide-up">
+        <h3 class="chart-title">30 Günlük Yanıt Trendi</h3>
+        <div style="height:280px"><canvas id="trend-chart"></canvas></div>
+    </div>
+    <div class="chart-container slide-up">
+        <h3 class="chart-title">Kategori Dağılımı</h3>
+        <div style="height:280px"><canvas id="cat-chart"></canvas></div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-top:1.5rem">
+    <div class="chart-container slide-up">
+        <h3 class="chart-title">Öncelik Dağılımı</h3>
+        <div style="height:250px"><canvas id="priority-chart"></canvas></div>
+    </div>
+    <div class="chart-container slide-up">
+        <h3 class="chart-title">Saatlik Yanıt Yoğunluğu (Son 30 Gün)</h3>
+        <div style="height:250px"><canvas id="hourly-chart"></canvas></div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-top:1.5rem">
+    <div class="chart-container slide-up">
+        <h3 class="chart-title">Kullanıcı Rol Dağılımı</h3>
+        <div style="height:250px"><canvas id="role-chart"></canvas></div>
+    </div>
+    <div class="card slide-up">
+        <div class="card-header"><h3 class="card-title">En Çok Yanıt Alan Anketler</h3></div>
+        {% for s in top_surveys %}
+        <div style="display:flex;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid var(--border);font-size:0.9rem">
+            <a href="{% url 'surveys:results' slug=s.slug %}">{{ s.title|truncatechars:40 }}</a>
+            <span style="font-family:var(--font-mono);color:var(--accent)">{{ s.total_responses }}</span>
+        </div>
+        {% empty %}
+        <p style="color:var(--text-muted);text-align:center;padding:1rem">Henuz veri yok</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+    createSahafChart('trend-chart','line',
+        [{% for d in daily_trend %}'{{d.date}}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        [{% for d in daily_trend %}{{d.count}}{% if not forloop.last %},{% endif %}{% endfor %}],'Yanıt');
+    {% if cat_stats %}
+    createSahafChart('cat-chart','doughnut',
+        [{% for c in cat_stats %}'{{c.icon}} {{c.name}}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        [{% for c in cat_stats %}{{c.response_count}}{% if not forloop.last %},{% endif %}{% endfor %}]);
+    {% endif %}
+    createSahafChart('priority-chart','bar',
+        [{% for p in priority_stats %}'{{p.priority}}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        [{% for p in priority_stats %}{{p.count}}{% if not forloop.last %},{% endif %}{% endfor %}],'Anket');
+    createSahafChart('hourly-chart','bar',
+        [...Array(24).keys()].map(h=>h+':00'),
+        {{hourly}},'Yanıt');
+    createSahafChart('role-chart','pie',
+        [{% for r in role_stats %}'{{r.role}}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        [{% for r in role_stats %}{{r.count}}{% if not forloop.last %},{% endif %}{% endfor %}]);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Kontrol Paneli - SAHAF{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Kontrol Paneli</h1>
+        <p class="page-subtitle">Hos geldin, {{ user.get_full_name|default:user.username }}. Platform durumu asagida.</p>
+    </div>
+    <a href="{% url 'surveys:list' %}" class="btn btn-primary" id="btn-new-survey">Anketleri Gor</a>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid slide-up">
+    <div class="stat-card">
+        <div class="stat-label">Toplam Anket</div>
+        <div class="stat-value">{{ total_surveys }}</div>
+        <div class="stat-meta">{{ active_surveys }} aktif</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Toplam Yanıt</div>
+        <div class="stat-value">{{ total_responses }}</div>
+        <div class="stat-meta">Bu hafta: {{ responses_this_week }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Kullanıcılar</div>
+        <div class="stat-value">{{ total_users }}</div>
+        <div class="stat-meta">{{ active_users }} aktif (30 gün)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Aktif Anket</div>
+        <div class="stat-value">{{ active_surveys }}</div>
+        <div class="stat-meta">Şu an yayında</div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Daily Responses Chart -->
+    <div class="chart-container slide-up">
+        <h3 class="chart-title">Son 7 Gün — Yanıt Trendi</h3>
+        <div style="height: 250px;">
+            <canvas id="daily-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- Category Distribution -->
+    <div class="chart-container slide-up">
+        <h3 class="chart-title">Kategori Dağılımı</h3>
+        <div style="height: 250px;">
+            <canvas id="category-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Surveys -->
+<div class="card slide-up" style="margin-top: 1.5rem;">
+    <div class="card-header">
+        <h2 class="card-title">Son Anketler</h2>
+        <a href="{% url 'surveys:list' %}" class="btn btn-outline btn-sm">Tümünü Gör</a>
+    </div>
+
+    {% if recent_surveys %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Anket</th>
+                    <th>Kategori</th>
+                    <th>Durum</th>
+                    <th>Öncelik</th>
+                    <th>Yanıt</th>
+                    <th>Tarih</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for survey in recent_surveys %}
+                <tr>
+                    <td><a href="{% url 'surveys:detail' slug=survey.slug %}">{{ survey.title }}</a></td>
+                    <td>{% if survey.category %}<span class="badge badge-category">{{ survey.category.name }}</span>{% else %}-{% endif %}</td>
+                    <td>
+                        <span class="badge badge-{% if survey.status == 'ACTIVE' %}active{% elif survey.status == 'DRAFT' %}draft{% else %}closed{% endif %}">
+                            {{ survey.get_status_display }}
+                        </span>
+                    </td>
+                    <td><span class="badge" style="background: {% if survey.priority == 'CRITICAL' %}rgba(255,77,106,0.15){% elif survey.priority == 'HIGH' %}rgba(255,184,0,0.15){% else %}var(--accent-dim){% endif %}; color: {% if survey.priority == 'CRITICAL' %}var(--accent-red){% elif survey.priority == 'HIGH' %}var(--accent-amber){% else %}var(--accent){% endif %};">{{ survey.get_priority_display }}</span></td>
+                    <td style="font-family: var(--font-mono);">{{ survey.total_responses }}</td>
+                    <td style="color: var(--text-muted);">{{ survey.created_at|date:"d/m/Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">Bos</div>
+        <h3 class="empty-title">Henuz anket yok</h3>
+        <p class="empty-text">Ilk anketinizi olusturmak icin admin panelini kullanin.</p>
+        <a href="/admin/surveys/survey/add/" class="btn btn-primary">Anket Olustur</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recent Responses -->
+<div class="card slide-up" style="margin-top: 1.5rem;">
+    <div class="card-header">
+        <h2 class="card-title">Son Yanıtlar</h2>
+    </div>
+    {% if recent_responses %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr><th>Anket</th><th>Yanıtlayan</th><th>Tarih</th></tr>
+            </thead>
+            <tbody>
+                {% for resp in recent_responses %}
+                <tr>
+                    <td><a href="{% url 'surveys:results' slug=resp.survey.slug %}">{{ resp.survey.title|truncatechars:50 }}</a></td>
+                    <td>{{ resp.respondent.get_full_name|default:"Anonim" }}</td>
+                    <td style="color: var(--text-muted);">{{ resp.created_at|date:"d/m/Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="text-align: center; color: var(--text-muted); padding: 2rem;">Henuz yanit bulunmuyor.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Daily chart
+    createPulseChart('daily-chart', 'line',
+        [{% for d in daily_responses %}'{{ d.date }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        [{% for d in daily_responses %}{{ d.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+        'Yanıt Sayısı'
+    );
+
+    // Category chart
+    {% if categories %}
+    createPulseChart('category-chart', 'doughnut',
+        [{% for c in categories %}'{{ c.name }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        [{% for c in categories %}{{ c.survey_count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+        'Anket Sayısı'
+    );
+    {% endif %}
+});
+</script>
+{% endblock %}

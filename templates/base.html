@@ -1,0 +1,144 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="tr" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sahaflar Platformu — kitap talep anketleri, envanter ve analitik">
+    <meta name="theme-color" content="#F6F1EA">
+    <title>{% block title %}Sahaflar Platformu{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700;800&family=Work+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Platform Styles -->
+    <link rel="stylesheet" href="{% static 'css/pulse.css' %}">
+    <link rel="icon" href="{% static 'favicon.svg' %}" type="image/svg+xml">
+    
+    <!-- Meta Tags -->
+    <meta property="og:title" content="Sahaflar Platformu">
+    <meta property="og:description" content="Kitap talep anketleri, envanter ve analitik">
+    <meta property="og:type" content="website">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="main-navbar">
+        <div class="navbar-brand">
+            <a href="/" class="brand-link" id="brand-logo">
+                <span class="brand-text">SAHAF</span>
+                <span class="brand-badge">v1.0</span>
+            </a>
+        </div>
+
+        <button class="hamburger" id="hamburger-btn" onclick="toggleMobileMenu()">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+
+        <div class="navbar-menu" id="main-nav-menu">
+            {% if user.is_authenticated %}
+            <a href="{% url 'dashboard:index' %}" class="nav-link {% if request.resolver_match.url_name == 'index' and request.resolver_match.app_name == 'dashboard' %}active{% endif %}" id="nav-dashboard">
+                Panel
+            </a>
+            <a href="{% url 'surveys:list' %}" class="nav-link {% if request.resolver_match.app_name == 'surveys' and request.resolver_match.url_name == 'list' %}active{% endif %}" id="nav-surveys">
+                Anketler
+            </a>
+            <a href="{% url 'surveys:my_surveys' %}" class="nav-link {% if request.resolver_match.url_name == 'my_surveys' %}active{% endif %}" id="nav-my-surveys">
+                Anketlerim
+            </a>
+            <a href="{% url 'dashboard:analytics' %}" class="nav-link {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}" id="nav-analytics">
+                Analitik
+            </a>
+            <a href="{% url 'dashboard:map' %}" class="nav-link {% if request.resolver_match.url_name == 'map' %}active{% endif %}" id="nav-map">
+                Harita
+            </a>
+            <a href="{% url 'dashboard:builder' %}" class="nav-link {% if request.resolver_match.url_name == 'builder' %}active{% endif %}" id="nav-builder">
+                Olustur
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="navbar-end">
+            {% if user.is_authenticated %}
+            <a href="{% url 'notifications:list' %}" class="nav-link" id="nav-notif-link" title="Bildirimler">
+                Bildirimler
+                <span class="notif-badge" id="nav-notif-badge" data-count="0"></span>
+            </a>
+            <div class="user-menu" id="user-menu">
+                <button class="user-menu-trigger" id="user-menu-trigger" onclick="toggleUserMenu()">
+                    <span class="user-avatar">{{ user.get_initials }}</span>
+                    <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                    <span class="user-role-badge role-{{ user.role|lower }}">{{ user.get_role_display }}</span>
+                </button>
+                <div class="user-dropdown" id="user-dropdown">
+                    <a href="{% url 'accounts:profile' %}" class="dropdown-item" id="menu-profile">Profil</a>
+                    <a href="{% url 'notifications:list' %}" class="dropdown-item" id="menu-notifs">Bildirimler</a>
+                    <a href="{% url 'dashboard:settings' %}" class="dropdown-item" id="menu-settings">Ayarlar</a>
+                    {% if user.is_admin or user.is_staff %}
+                    <a href="/admin/" class="dropdown-item" id="menu-admin">Admin Panel</a>
+                    {% endif %}
+                    <hr class="dropdown-divider">
+                    <a href="{% url 'accounts:logout' %}" class="dropdown-item dropdown-item-danger" id="menu-logout">Guvenli Cikis</a>
+                </div>
+            </div>
+            {% else %}
+            <a href="{% url 'accounts:login' %}" class="btn btn-outline" id="nav-login">Giriş Yap</a>
+            <a href="{% url 'accounts:register' %}" class="btn btn-primary" id="nav-register">Kayıt Ol</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages-container" id="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" id="alert-{{ forloop.counter }}">
+            <span class="alert-icon">
+                {% if message.tags == 'success' %}OK{% elif message.tags == 'error' %}HATA{% elif message.tags == 'warning' %}UYARI{% else %}BILGI{% endif %}
+            </span>
+            <span class="alert-text">{{ message }}</span>
+            <button class="alert-close" onclick="this.parentElement.remove()">Kapat</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" id="main-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                SAHAF Platformu
+            </div>
+            <div class="footer-info">
+                Sahaflar icin anket ve envanter platformu
+            </div>
+            <div class="footer-meta">
+                <span class="status-indicator status-online"></span>
+                Sistem Aktif - v1.0.0
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top -->
+    <button class="scroll-top" id="scroll-top-btn" onclick="scrollToTop()" title="Yukari Cik">
+        Yukari
+    </button>
+
+    <!-- Platform Scripts -->
+    <script src="{% static 'js/pulse.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

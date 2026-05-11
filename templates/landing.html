@@ -1,0 +1,152 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="tr" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sahaflar Platformu — kitap talep anketleri ve analitik">
+    <title>Sahaflar Platformu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700;800&family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/pulse.css' %}">
+    <style>
+        .hero{min-height:90vh;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden;padding:2rem}
+        .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 15%,rgba(179,92,30,0.12) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(58,125,120,0.10) 0%,transparent 60%)}
+        .hero-content{position:relative;z-index:1;max-width:800px}
+        .hero-badge{display:inline-flex;align-items:center;gap:0.5rem;padding:0.4rem 1rem;background:var(--accent-dim);border:1px solid rgba(179,92,30,0.3);border-radius:20px;font-size:0.8rem;color:var(--accent);font-weight:600;margin-bottom:2rem;animation:fadeIn 1s ease}
+        .hero-title{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;line-height:1.1;margin-bottom:1.5rem;animation:slideUp 0.8s ease}
+        .hero-title .accent{background:linear-gradient(135deg,var(--accent),var(--accent-blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .hero-subtitle{font-size:1.2rem;color:var(--text-secondary);line-height:1.6;margin-bottom:2.5rem;max-width:600px;margin-left:auto;margin-right:auto;animation:slideUp 1s ease}
+        .hero-cta{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;animation:slideUp 1.2s ease}
+        .hero-cta .btn-lg{padding:1rem 2.5rem;font-size:1.05rem}
+
+        .section{padding:5rem 2rem}
+        .section-title{text-align:center;font-size:2rem;font-weight:800;margin-bottom:0.5rem}
+        .section-subtitle{text-align:center;color:var(--text-secondary);margin-bottom:3rem;font-size:1rem}
+
+        .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;max-width:1200px;margin:0 auto}
+        .feature-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;text-align:center;transition:var(--transition)}
+        .feature-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg);border-color:rgba(0,240,160,0.3)}
+        .feature-title{font-size:1.1rem;font-weight:700;margin-bottom:0.5rem}
+        .feature-desc{color:var(--text-secondary);font-size:0.9rem;line-height:1.5}
+
+        .stats-section{background:var(--bg-secondary);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+        .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:2rem;max-width:900px;margin:0 auto;text-align:center}
+        .stat-big{font-size:3rem;font-weight:900;font-family:var(--font-mono);background:linear-gradient(135deg,var(--accent),var(--accent-blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .stat-label-big{font-size:0.85rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:0.25rem}
+
+        .how-it-works{max-width:900px;margin:0 auto}
+        .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:2rem}
+        .step{text-align:center;padding:1.5rem}
+        .step-number{width:48px;height:48px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:inline-flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:800;color:var(--accent);margin-bottom:1rem;font-family:var(--font-mono)}
+        .step-title{font-size:1.1rem;font-weight:700;margin-bottom:0.5rem}
+        .step-desc{color:var(--text-secondary);font-size:0.9rem}
+
+        .cta-section{text-align:center;max-width:600px;margin:0 auto}
+        .cta-title{font-size:2rem;font-weight:800;margin-bottom:1rem}
+        .cta-text{color:var(--text-secondary);margin-bottom:2rem}
+
+        .landing-footer{border-top:1px solid var(--border);padding:2rem;text-align:center;color:var(--text-muted);font-size:0.85rem}
+        .landing-footer a{color:var(--text-secondary)}
+
+        .grid-bg{position:fixed;inset:0;z-index:-1;opacity:0.04;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px}
+
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a href="/" class="brand-link"><span class="brand-text">SAHAF</span><span class="brand-badge">v1.0</span></a>
+        </div>
+        <div class="navbar-end">
+            <a href="{% url 'surveys:list' %}" class="nav-link">Anketler</a>
+            <a href="{% url 'accounts:login' %}" class="btn btn-outline" id="landing-login">Giriş Yap</a>
+            <a href="{% url 'accounts:register' %}" class="btn btn-primary" id="landing-register">Kayıt Ol</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero" id="hero">
+        <div class="hero-content">
+            <div class="hero-badge">Sahaflar icin ortak talep ve envanter akisi</div>
+            <h1 class="hero-title">Kitap talebini <span class="accent">netlestirin</span></h1>
+            <p class="hero-subtitle">Sahaflar Platformu, okur taleplerini ve kitap arayislarini anketlerle toplar. Kategoriler, konum ve analitik ile dogru stoğa hizlica ulasin.</p>
+            <div class="hero-cta">
+                <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg" id="hero-cta-register">Hemen Başla</a>
+                <a href="#features" class="btn btn-outline btn-lg" id="hero-cta-features">Kesfet</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="section stats-section">
+        <div class="stats-row">
+            <div><div class="stat-big">{{ stats.surveys }}</div><div class="stat-label-big">Anket</div></div>
+            <div><div class="stat-big">{{ stats.responses }}</div><div class="stat-label-big">Yanit</div></div>
+            <div><div class="stat-big">{{ stats.users }}</div><div class="stat-label-big">Kullanici</div></div>
+            <div><div class="stat-big">{{ stats.categories }}</div><div class="stat-label-big">Kategori</div></div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section" id="features">
+        <h2 class="section-title">Platform Ozellikleri</h2>
+        <p class="section-subtitle">Sahaf odakli, pratik ve guvenli is akislari</p>
+        <div class="features-grid">
+            {% for f in features %}
+            <div class="feature-card">
+                <h3 class="feature-title">{{ f.title }}</h3>
+                <p class="feature-desc">{{ f.desc }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section stats-section" id="how">
+        <div class="how-it-works">
+            <h2 class="section-title">Nasil Calisir?</h2>
+            <p class="section-subtitle">3 adimda talepten rapora</p>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">Anket Olustur</h3>
+                    <p class="step-desc">Kitap taleplerini toplayacak kisa anketler hazirlayin</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">Paylas</h3>
+                    <p class="step-desc">Anketleri link ile okurlara ve sahaf agina ulastirin</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">Analiz Et</h3>
+                    <p class="step-desc">Talepleri kategori, konum ve oncelige gore inceleyin</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section">
+        <div class="cta-section">
+            <h2 class="cta-title">Hazir misiniz?</h2>
+            <p class="cta-text">Sahaflar Platformu ile talep verisini duzenli toplayin.</p>
+            <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">Ucretsiz Hesap Olustur</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+        <p>SAHAF Platformu - <a href="{% url 'contact' %}">Iletisim</a> · <a href="/api/v1/">API</a> · <a href="/admin/">Admin</a></p>
+        <p style="margin-top:0.5rem">© 2026 SAHAF. Tum haklari saklidir.</p>
+    </footer>
+
+    <script src="{% static 'js/pulse.js' %}"></script>
+</body>
+</html>

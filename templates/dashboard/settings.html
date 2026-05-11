@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Ayarlar — Sahaflar Platformu{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div><h1 class="page-title">Ayarlar</h1><p class="page-subtitle">Platform ve hesap tercihlerinizi yönetin</p></div>
+</div>
+<div class="grid-2">
+    <div class="card slide-up">
+        <div class="card-header"><h2 class="card-title">Hesap</h2></div>
+        <a href="{% url 'accounts:profile' %}" style="display:flex;justify-content:space-between;align-items:center;padding:1rem 0;border-bottom:1px solid var(--border);color:var(--text-primary)">
+            <div><div style="font-weight:600">Profil Bilgileri</div><div style="font-size:0.8rem;color:var(--text-secondary)">Ad, soyad, e-posta, telefon</div></div>
+            <span style="color:var(--text-muted)">Detaylar</span>
+        </a>
+        <a href="/admin/password_change/" style="display:flex;justify-content:space-between;align-items:center;padding:1rem 0;border-bottom:1px solid var(--border);color:var(--text-primary)">
+            <div><div style="font-weight:600">Şifre Değiştir</div><div style="font-size:0.8rem;color:var(--text-secondary)">Hesap güvenliğiniz için düzenli değiştirin</div></div>
+            <span style="color:var(--text-muted)">Detaylar</span>
+        </a>
+        <div style="padding:1rem 0">
+            <div style="font-weight:600;margin-bottom:0.5rem">Hesap Türü</div>
+            <span class="user-role-badge role-{{ user.role|lower }}" style="font-size:0.8rem">{{ user.get_role_display }}</span>
+        </div>
+    </div>
+    <div class="card slide-up">
+        <div class="card-header"><h2 class="card-title">Platform</h2></div>
+        <div style="padding:1rem 0;border-bottom:1px solid var(--border)">
+            <div style="font-weight:600;margin-bottom:0.25rem">Tema</div>
+            <div style="font-size:0.85rem;color:var(--text-secondary)">Sahaflar Light (Varsayılan)</div>
+        </div>
+        <div style="padding:1rem 0;border-bottom:1px solid var(--border)">
+            <div style="font-weight:600;margin-bottom:0.25rem">Dil</div>
+            <div style="font-size:0.85rem;color:var(--text-secondary)">Türkçe</div>
+        </div>
+        <div style="padding:1rem 0;border-bottom:1px solid var(--border)">
+            <div style="font-weight:600;margin-bottom:0.25rem">Saat Dilimi</div>
+            <div style="font-size:0.85rem;color:var(--text-secondary)">Europe/Istanbul (UTC+3)</div>
+        </div>
+        <div style="padding:1rem 0">
+            <div style="font-weight:600;margin-bottom:0.25rem">Platform Sürümü</div>
+            <div style="font-size:0.85rem;color:var(--accent);font-family:var(--font-mono)">v1.0.0</div>
+        </div>
+    </div>
+    <div class="card slide-up">
+        <div class="card-header"><h2 class="card-title">Hızlı Bağlantılar</h2></div>
+        <a href="/admin/" style="display:block;padding:0.75rem 0;border-bottom:1px solid var(--border);color:var(--text-primary);font-weight:500">Django Admin Paneli</a>
+        <a href="/api/v1/" style="display:block;padding:0.75rem 0;border-bottom:1px solid var(--border);color:var(--text-primary);font-weight:500">REST API Dokümantasyonu</a>
+        <a href="{% url 'notifications:activity_log' %}" style="display:block;padding:0.75rem 0;border-bottom:1px solid var(--border);color:var(--text-primary);font-weight:500">Aktivite Logu</a>
+        <a href="{% url 'contact' %}" style="display:block;padding:0.75rem 0;color:var(--text-primary);font-weight:500">İletişim</a>
+    </div>
+    <div class="card slide-up">
+        <div class="card-header"><h2 class="card-title">Tehlikeli Bölge</h2></div>
+        <div style="padding:1rem;background:rgba(255,77,106,0.05);border:1px solid rgba(255,77,106,0.2);border-radius:var(--radius-sm)">
+            <div style="font-weight:600;color:var(--accent-red);margin-bottom:0.25rem">Hesabı Devre Dışı Bırak</div>
+            <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:0.75rem">Bu işlem geri alınamaz. Tüm verileriniz silinecektir.</div>
+            <button class="btn btn-sm" style="background:var(--accent-red);color:white" disabled>Devre Dışı Bırak</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

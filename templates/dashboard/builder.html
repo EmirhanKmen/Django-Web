@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Anket Olustur - SAHAF{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Anket Olusturucu</h1>
+        <p class="page-subtitle">Yeni anket olusturun, sorularinizi ekleyin ve yayinlayin</p>
+    </div>
+</div>
+
+<form method="post" id="builder-form">
+    {% csrf_token %}
+
+    <div class="card slide-up" style="margin-bottom:1.5rem">
+        <div class="card-header"><h2 class="card-title">Anket Bilgileri</h2></div>
+        <div class="form-group">
+            <label class="form-label">Anket Basligi *</label>
+            <input type="text" name="title" class="form-input" placeholder="Anket basligini yazin..." required id="builder-title">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Açıklama</label>
+            <textarea name="description" class="form-input form-textarea" placeholder="Anketin amacini aciklayin..." id="builder-desc"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem">
+            <div class="form-group">
+                <label class="form-label">Kategori</label>
+                <select name="category" class="filter-select" style="width:100%" id="builder-category">
+                    <option value="">Kategori Secin</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Öncelik</label>
+                <select name="priority" class="filter-select" style="width:100%" id="builder-priority">
+                    <option value="LOW">Dusuk</option>
+                    <option value="MEDIUM" selected>Orta</option>
+                    <option value="HIGH">Yuksek</option>
+                    <option value="CRITICAL">Kritik</option>
+                </select>
+            </div>
+            <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end">
+                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.9rem">
+                    <input type="checkbox" name="is_public" checked style="accent-color:var(--accent);width:18px;height:18px"> Herkese Acik
+                </label>
+                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.9rem;margin-top:0.5rem">
+                    <input type="checkbox" name="allow_anonymous" style="accent-color:var(--accent);width:18px;height:18px"> Anonim Yanit
+                </label>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;margin-top:0.75rem">
+            <div class="form-group">
+                <label class="form-label">Konum Adi / Adres (Opsiyonel)</label>
+                <div style="display:flex;gap:0.5rem">
+                    <input type="text" name="location_name" id="location_name_input" class="form-input" placeholder="Orn: Istanbul, Kadikoy" style="flex:1">
+                    <button type="button" class="btn btn-outline" onclick="geocodeAddress()" style="padding:0 1rem;white-space:nowrap" title="Koordinatlari Bul">Bul</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Enlem (Latitude)</label>
+                <input type="number" step="any" name="latitude" id="latitude_input" class="form-input" placeholder="Orn: 36.2023">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Boylam (Longitude)</label>
+                <input type="number" step="any" name="longitude" id="longitude_input" class="form-input" placeholder="Orn: 36.1613">
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions Container -->
+    <div id="questions-container"></div>
+
+    <div style="display:flex;gap:0.75rem;margin:1.5rem 0">
+        <button type="button" class="btn btn-outline" onclick="addQuestion()" id="btn-add-question">Soru Ekle</button>
+    </div>
+
+    <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+        <a href="{% url 'dashboard:index' %}" class="btn btn-outline">Iptal</a>
+        <button type="submit" class="btn btn-primary btn-lg" id="builder-submit">Anketi Olustur</button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let questionCount = 0;
+const QTYPES = [
+    {value:'SINGLE',label:'Tek Seçimli',hasChoices:true},
+    {value:'MULTIPLE',label:'Çoklu Seçimli',hasChoices:true},
+    {value:'YESNO',label:'Evet / Hayır',hasChoices:true},
+    {value:'TEXT',label:'Açık Uçlu Metin',hasChoices:false},
+    {value:'NUMBER',label:'Sayısal',hasChoices:false},
+    {value:'RATING',label:'Derecelendirme (1-5)',hasChoices:false},
+    {value:'SLIDER',label:'Kaydırma (0-100)',hasChoices:false},
+    {value:'DATE',label:'Tarih',hasChoices:false},
+];
+
+function addQuestion(){
+    const idx = questionCount++;
+    const container = document.getElementById('questions-container');
+    const div = document.createElement('div');
+    div.className = 'card slide-up';
+    div.style.marginBottom = '1rem';
+    div.id = `question-card-${idx}`;
+    div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+            <h3 style="font-size:1rem;font-weight:600">Soru ${idx+1}</h3>
+            <button type="button" class="btn btn-outline btn-sm" style="color:var(--accent-red);border-color:var(--accent-red)" onclick="this.closest('.card').remove()">Kaldir</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Soru Metni *</label>
+            <input type="text" name="question_${idx}_text" class="form-input" placeholder="Sorunuzu yazın..." required>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:0.75rem;align-items:end">
+            <div class="form-group">
+                <label class="form-label">Soru Tipi</label>
+                <select name="question_${idx}_type" class="filter-select" style="width:100%" onchange="toggleChoices(${idx},this.value)">
+                    ${QTYPES.map(t=>`<option value="${t.value}">${t.label}</option>`).join('')}
+                </select>
+            </div>
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.85rem;padding:0.75rem 0">
+                    <input type="checkbox" name="question_${idx}_required" checked style="accent-color:var(--accent)"> Zorunlu
+                </label>
+            </div>
+        </div>
+        <div id="choices-${idx}">
+            <div class="form-group"><label class="form-label">Seçenekler</label></div>
+            <div id="choices-list-${idx}"></div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="addChoice(${idx})" style="margin-top:0.5rem">Secenek Ekle</button>
+        </div>
+    `;
+    container.appendChild(div);
+    addChoice(idx);
+    addChoice(idx);
+    if(QTYPES[0].value==='YESNO'){
+        // Default Evet/Hayır added via normal flow
+    }
+}
+
+function toggleChoices(idx, type) {
+    const hasChoices = QTYPES.find(t=>t.value===type)?.hasChoices;
+    const el = document.getElementById(`choices-${idx}`);
+    el.style.display = hasChoices ? 'block' : 'none';
+}
+
+let choiceCounts = {};
+function addChoice(qIdx) {
+    if(!choiceCounts[qIdx]) choiceCounts[qIdx] = 0;
+    const cIdx = choiceCounts[qIdx]++;
+    const list = document.getElementById(`choices-list-${qIdx}`);
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem';
+    div.innerHTML = `
+        <input type="text" name="question_${qIdx}_choice_${cIdx}" class="form-input" placeholder="Seçenek ${cIdx+1}" style="flex:1">
+        <button type="button" class="btn btn-outline btn-sm" style="color:var(--accent-red)" onclick="this.parentElement.remove()">Sil</button>
+    `;
+    list.appendChild(div);
+}
+
+async function geocodeAddress() {
+    const address = document.getElementById('location_name_input').value;
+    if (!address) {
+        alert("Lutfen once bir konum adi veya adres girin.");
+        return;
+    }
+    
+    const btn = document.querySelector('button[onclick="geocodeAddress()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "Araniyor...";
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+            document.getElementById('latitude_input').value = data[0].lat;
+            document.getElementById('longitude_input').value = data[0].lon;
+        } else {
+            alert("Konum bulunamadi. Lutfen daha belirgin bir adres girin (Orn: Ilce, Il).");
+        }
+    } catch (error) {
+        console.error("Geocoding error:", error);
+        alert("Konum aranirken bir hata olustu.");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+// Add first question automatically
+addQuestion();
+</script>
+{% endblock %}

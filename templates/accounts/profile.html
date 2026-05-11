@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Profil - SAHAF{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Profil Ayarları</h1>
+        <p class="page-subtitle">Hesap bilgilerinizi guncelleyin</p>
+    </div>
+</div>
+
+<div class="grid-2">
+        <div class="card slide-up">
+            <div class="card-header">
+                <h2 class="card-title">Kişisel Bilgiler</h2>
+            </div>
+            <form method="post" enctype="multipart/form-data" id="profile-form">
+                {% csrf_token %}
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div class="form-group">
+                        <label class="form-label">Ad</label>
+                        {{ form.first_name }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Soyad</label>
+                        {{ form.last_name }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">E-posta</label>
+                    {{ form.email }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Telefon</label>
+                    {{ form.phone_number }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Kurum / Kuruluş</label>
+                    {{ form.organization }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Konum</label>
+                    {{ form.location }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Hakkında</label>
+                    {{ form.bio }}
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="profile-save">Kaydet</button>
+            </form>
+        </div>
+
+        <div>
+            <div class="card slide-up" style="text-align: center; padding: 2.5rem;">
+                <div class="user-avatar" style="width: 80px; height: 80px; font-size: 1.5rem; margin: 0 auto 1rem;">
+                    {{ user.get_initials }}
+                </div>
+                <h3 style="font-size: 1.25rem; margin-bottom: 0.25rem;">{{ user.get_full_name|default:user.username }}</h3>
+                <span class="user-role-badge role-{{ user.role|lower }}" style="font-size: 0.75rem;">{{ user.get_role_display }}</span>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 1rem;">
+                    Kayıt: {{ user.date_joined|date:"d M Y" }}
+                </p>
+            </div>
+
+            <div class="card slide-up" style="margin-top: 1rem;">
+                <div class="card-header">
+                    <h2 class="card-title">Hesap Bilgileri</h2>
+                </div>
+                <div style="font-size: 0.9rem;">
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
+                        <span style="color: var(--text-secondary);">Rol</span>
+                        <span>{{ user.get_role_display }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
+                        <span style="color: var(--text-secondary);">Doğrulanmış</span>
+                        <span>{% if user.is_verified %}Evet{% else %}Hayir{% endif %}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                        <span style="color: var(--text-secondary);">Son Aktivite</span>
+                        <span>{{ user.last_activity|date:"d/m/Y H:i"|default:"-" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
